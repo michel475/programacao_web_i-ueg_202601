@@ -22,6 +22,17 @@ export class UsersTypeOrmRepository implements UsersRepositoryPort {
         return this.toDomain(saved);
     }
 
+    async createEmLote(users: User[]): Promise<User[]> {
+        const orm = users.map(user => this.repo.create({
+            name: user.name,
+            email: user.email,
+            isActive: user.isActive
+        }));
+
+        const saved = await this.repo.save(orm);
+        return saved.map(this.toDomain);
+    }
+
     async findById(id: number): Promise<User | null> {
         const found = await this.repo.findOneBy({ id });
         return found ? this.toDomain(found) : null;
@@ -33,7 +44,15 @@ export class UsersTypeOrmRepository implements UsersRepositoryPort {
     }
 
     async findByEmail(email: string): Promise<User | null> {
-        const found = await this.repo.findOneBy({ email });
+        const emailTratado = email.replace("%40", "@");
+        console.log(emailTratado);
+        const found = await this.repo.findOneBy({ email: emailTratado });
+        console.log(email);
+        return found ? this.toDomain(found) : null;
+    }
+
+    async findByNome(name: string): Promise<User | null> {
+        const found = await this.repo.findOneBy({ name: name, });
         return found ? this.toDomain(found) : null;
     }
 
