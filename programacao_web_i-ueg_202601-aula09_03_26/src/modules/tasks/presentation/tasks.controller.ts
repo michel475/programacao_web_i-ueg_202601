@@ -27,6 +27,12 @@ export class TasksController {
         return this.taskService.findById(Number(id));
     }
 
+    // @Patch(':id')
+    // @ApiOperation({ summary: 'atualizar uma tarefa' })
+    // update(@Param('id') id: string) {
+    //     return this.taskService.update(Number(id));
+    // }
+
     @Get('priority/:priority')
     @ApiOperation({ summary: 'Busca tarefa pela prioridade' })
     findByPriority(@Param('priority') priority: string) {

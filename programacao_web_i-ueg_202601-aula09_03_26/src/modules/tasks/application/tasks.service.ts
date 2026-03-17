@@ -28,6 +28,10 @@ export class TaskService {
         return this.taskRepo.findAll();
     }
 
+    // async update(id:number): Promise<Task|null> {
+    //     const task = await this.taskRepo.findById(id);
+    // }
+
     async findByPriority(priority: number): Promise<Task[] | null> {
         const tasks: Task[] | null = await this.taskRepo.findByPriority(priority);
         if (tasks?.length === 0) throw new HttpException("Nenhuma tarefa encontrada", HttpStatus.NOT_FOUND);
