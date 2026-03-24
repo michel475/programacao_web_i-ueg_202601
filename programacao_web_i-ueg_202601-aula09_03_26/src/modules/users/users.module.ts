@@ -15,5 +15,6 @@ import { UsersTypeOrmRepository } from './infrastructure/persistence/typeorm/use
             useClass: UsersTypeOrmRepository,
         },
     ],
+    exports: ['UsersRepositoryPort'],
 })
 export class UsersModule { }

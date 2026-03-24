@@ -1,9 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Task } from 'src/modules/tasks/domain/task';
+import { TaskOrmEntity } from 'src/modules/tasks/infrastructure/persistence/typeorm/task.orm-entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 
 @Entity('users')
 export class UserOrmEntity {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @OneToMany(() => Task, task => task.user)
+    tasks: Task[];
 
     @Column({ length: 120 })
     name: string;
@@ -19,5 +24,6 @@ export class UserOrmEntity {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
 }
 

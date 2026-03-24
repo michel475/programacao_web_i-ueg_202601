@@ -1,22 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TaskRepositoryPort } from '../../../application/ports/tasks.repository.port';
 import { Task } from '../../../domain/task';
 import { TaskOrmEntity } from './task.orm-entity';
+import type { UsersRepositoryPort } from '../../../../users/application/ports/users.repository.port';
 
 @Injectable()
 export class TasksTypeOrmRepository implements TaskRepositoryPort {
     constructor(
+        @Inject('UsersRepositoryPort')
+        private readonly userRepo: UsersRepositoryPort,
         @InjectRepository(TaskOrmEntity)
         private readonly repo: Repository<TaskOrmEntity>,
     ) { }
 
     async create(task: Task): Promise<Task> {
+        const user = await this.userRepo.findById(task.userId);
+        if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         const orm = this.repo.create({
             title: task.title,
             priority: task.priority,
             isDone: task.isDone,
+            createdAt: task.createdAt,
+            updatedAt: task.updatedAt
         });
         const saved = await this.repo.save(orm);
         return this.toDomain(saved);
@@ -27,9 +34,16 @@ export class TasksTypeOrmRepository implements TaskRepositoryPort {
         return tasks.map(this.toDomain);
     }
 
+    async findAllUsersTasks(userId: number): Promise<Task[] | null> {
+        const tasks = await this.repo.findBy({ user: { id: userId } })
+        return tasks.map(this.toDomain);
+    }
+
     async findById(id: number): Promise<Task | null> {
         const found = await this.repo.findOneBy({ id });
-        return found ? this.toDomain(found) : null;
+        if (!found)
+            throw new HttpException("Task not found", HttpStatus.NOT_FOUND);
+        return this.toDomain(found);
     }
 
     async findAll(): Promise<Task[]> {
@@ -49,7 +63,7 @@ export class TasksTypeOrmRepository implements TaskRepositoryPort {
 
     async update(task: Task): Promise<Task> {
         const orm = await this.repo.findOneBy({ id: task.id! });
-        if (!orm) throw new Error('Task not found');
+        if (!orm) throw new HttpException('Task not found', HttpStatus.NOT_FOUND);
 
         orm.title = task.title;
         orm.priority = task.priority;
@@ -67,6 +81,6 @@ export class TasksTypeOrmRepository implements TaskRepositoryPort {
     }
 
     private toDomain = (orm: TaskOrmEntity): Task => {
-        return new Task(orm.id, orm.title, orm.priority, orm.isDone, orm.createdAt, orm.updatedAt);
+        return new Task(orm.id, orm.title, orm.priority, orm.isDone, orm.user.id, orm.createdAt, orm.updatedAt);
     };
 }

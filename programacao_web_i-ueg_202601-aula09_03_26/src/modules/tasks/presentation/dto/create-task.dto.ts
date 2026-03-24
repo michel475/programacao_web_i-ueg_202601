@@ -6,4 +6,7 @@ export class CreateTaskDto {
 
     @ApiProperty({ example: 5 })
     priority: number;
+
+    @ApiProperty({ example: 1 })
+    userId: number;
 }

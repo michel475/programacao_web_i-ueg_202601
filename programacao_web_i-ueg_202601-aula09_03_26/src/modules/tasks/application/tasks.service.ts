@@ -2,17 +2,22 @@ import type { TaskRepositoryPort } from './ports/tasks.repository.port';
 import { Task } from '../domain/task';
 import { Inject, Injectable, HttpStatus, HttpException } from '@nestjs/common';
 import { CreateTaskDto } from '../presentation/dto/create-task.dto';
+import type { UsersRepositoryPort } from 'src/modules/users/application/ports/users.repository.port';
 
 @Injectable()
 export class TaskService {
     constructor(
+        @Inject('UserRepositoryPort')
+        private readonly userRepo: UsersRepositoryPort,
         @Inject('TaskRepositoryPort')
         private readonly taskRepo: TaskRepositoryPort,) { }
 
-    async create(title: string, priority: number): Promise<Task> {
+    async create(title: string, priority: number, userId: number): Promise<Task> {
         const existing = await this.taskRepo.findByTitle(title);
+        const user = await this.userRepo.findById(userId);
+        if (!user) throw new HttpException('Usuário não encontrado', HttpStatus.NOT_FOUND);
         if (existing) throw new HttpException('Tarefa já cadastrada', HttpStatus.BAD_REQUEST);
-        const task = new Task(null, title.trim(), priority, false);
+        const task = new Task(null, title.trim(), priority, false, user, new Date(), new Date());
         return this.taskRepo.create(task);
     }
 
@@ -26,6 +31,12 @@ export class TaskService {
         const tasks: Task[] = await this.taskRepo.findAll();
         if (tasks.length === 0) throw new HttpException("Nenhuma tarefa encontrada", HttpStatus.NOT_FOUND);
         return this.taskRepo.findAll();
+    }
+
+    async findAllUsersTasks(userId: number): Promise<Task[] | null> {
+        const tasks: Task[] = await this.taskRepo.findAll();
+        if (tasks.length === 0) throw new HttpException("Nenhuma tarefa encontrada", HttpStatus.NOT_FOUND);
+        return this.taskRepo.findAllUsersTasks(userId);
     }
 
     // async update(id:number): Promise<Task|null> {

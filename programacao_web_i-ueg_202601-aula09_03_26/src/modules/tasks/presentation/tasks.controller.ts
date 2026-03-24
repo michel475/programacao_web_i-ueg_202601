@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Patch } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Patch, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { TaskService } from '../application/tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -11,10 +11,17 @@ export class TasksController {
     @Post()
     @ApiOperation({ summary: 'Cria uma nova tarefa' })
     create(@Body() dto: CreateTaskDto) {
-        return this.taskService.create(dto.title, dto.priority);
+        return this.taskService.create(dto.title, dto.priority, dto.userId);
     }
 
-    @Get()
+    @Get(':userId')
+    @ApiParam({ name: 'userId', example: 1 })
+    @ApiOperation({ summary: 'Lista tarefas de usuario' })
+    findAllUsersTasks(@Param('userId') userId: string) {
+        return this.taskService.findAllUsersTasks(Number(userId));
+    }
+
+    @Get('list')
     @ApiOperation({ summary: 'Lista tarefas' })
     findAll() {
         return this.taskService.findAll();
